@@ -6,7 +6,7 @@ const path = require('path'); // Import Path module
 const app = express(); // Create an Express application
 const cors = require('cors')
 const port = 3000; // Set the port number
-
+const redisClient = require('./redisClient');
 // Middleware to parse JSON request bodies
 app.use(express.json()); // Add this line to parse JSON requests
 app.use(cors())

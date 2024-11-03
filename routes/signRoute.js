@@ -9,7 +9,45 @@ AWS.config.update({region : 'ap-south-1'})
 const db = new AWS.DynamoDB.DocumentClient();
 const cognito = new AWS.CognitoIdentityServiceProvider();
 const googleClientID = "923862509191-lss5f0b0vs8itucpv0o2enc4j12qmrtk.apps.googleusercontent.com"
-const client = new OAuth2Client(googleClientID)
+const client = new OAuth2Client(googleClientID);
+const redisClient = require('../redisClient');
+
+const setUserLoginStatus = async (username, status) => {
+    await redisClient.set(username, status, 'EX', 86400 * 10); // Expires in 1 hour
+};
+
+
+router.post('/logout', async (req, res) => {
+    const { username } = req.body;
+
+    try {
+        // Remove the user's login status from Redis
+        await redisClient.del(username); 
+
+        res.status(200).json({ message: 'User logged out successfully' });
+    } catch (error) {
+        console.error('Error during logout: ', error);
+        res.status(500).json({ error: `Logout error: ${error.message}` });
+    }
+});
+
+
+router.get('/loginstatus', async (req,res) => {
+    const { username } = req.query
+
+    try {
+        const loginStatus = await redisClient.get(username)
+
+        if (loginStatus) {
+            return res.status(200).json({ message: 'User is logged in', loggedIn: true });
+        } else {
+            return res.status(200).json({ message: 'User is not logged in', loggedIn: false });
+        }
+    } catch (error) {
+        console.error('Error checking login status: ', error);
+        res.status(500).json({ error: `Error checking login status: ${error.message}` });
+    }
+})
 
 router.post('/signup', async (req,res)=>{
     const {email,username , password, favorites, unit} = req.body;
@@ -143,6 +181,9 @@ router.post('/signin', async (req, res)=>{
         }
 
         const authResponse = await cognito.initiateAuth(authParams).promise();
+
+        await setUserLoginStatus(username, 'loggedIn');
+
         res.status(200).json({message: 'Sign in successfull', user: userData.Item ,authResponse})
 
     } catch(error){
@@ -194,6 +235,8 @@ router.post('/google-signin', async (req, res) => {
             TableName: 'Users',
             Key: { username },
         }).promise();
+
+        await setUserLoginStatus(username, 'loggedIn');
 
         
         res.status(200).json({ message: 'Google Sign-in successful', user: userData_final.Item });
