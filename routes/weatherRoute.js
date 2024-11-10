@@ -60,7 +60,13 @@ router.get('/forecast', async (req, res) => {
         console.log(coordinates.lat, coordinates.lon);
 
         const weatherbitUrl = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${coordinates.lat}&lon=${coordinates.lon}&key=${apiKeyForecast2}&days=7`;
-        const weatherbitResponse = await axios.get(weatherbitUrl);
+        
+        // Fetch weather and sunrise/sunset data in parallel
+        const [weatherbitResponse] = await Promise.all([
+            axios.get(weatherbitUrl), // Weather forecast
+            // You can also parallelize other requests here if needed
+        ]);
+
         const dailyForecast = weatherbitResponse.data.data;
 
         // Helper function to get sunrise and sunset times for a specific day
@@ -80,7 +86,7 @@ router.get('/forecast', async (req, res) => {
             return { sunrise: formattedSunrise, sunset: formattedSunset };
         };
 
-        // Map each day in the forecast, adding sunrise and sunset times
+        // Fetch sunrise/sunset for all forecast days in parallel
         const forecast = await Promise.all(dailyForecast.slice(0, 7).map(async (day) => {
             const { sunrise, sunset } = await getSunriseSunset(coordinates.lat, coordinates.lon, day.valid_date);
             return {
