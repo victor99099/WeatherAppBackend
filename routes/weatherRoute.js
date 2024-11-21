@@ -8,6 +8,8 @@ AWS.config.update({ region: 'ap-south-1' });
 const apiKey = '0571fc40afe0f77bb8737158022c23e5';
 const apiKeyForecast = "31be16144b084334a7b6cd087d3bf50c";
 const apiKeyForecast2 = "2aba49f182c742bd9cc07a9ee694e82d";
+const apiKeyForecast3 = "02689424af114c01b78ebcc20af9726b";
+
 
 async function getCoordinates(city) {
 

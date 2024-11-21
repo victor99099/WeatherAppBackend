@@ -36,10 +36,18 @@ router.get('/loginstatus', async (req,res) => {
     const { username } = req.query
 
     try {
+
+        const userParams = {
+            TableName:'Users',
+            Key : {username}
+        }
+
+        const userData = await db.get(userParams).promise()
+
         const loginStatus = await redisClient.get(username)
 
         if (loginStatus) {
-            return res.status(200).json({ message: 'User is logged in', loggedIn: true });
+            return res.status(200).json({ message: 'User is logged in', loggedIn: true , user: userData.Item});
         } else {
             return res.status(200).json({ message: 'User is not logged in', loggedIn: false });
         }
