@@ -9,7 +9,7 @@ const port = 3000; // Set the port number
 const redisClient = require('./redisClient');
 // Middleware to parse JSON request bodies
 app.use(express.json()); // Add this line to parse JSON requests
-app.use(cors())
+app.use(cors());
 
 app.use('/public', express.static(path.join(__dirname, 'public'))); // Serve static files from public directory
 
